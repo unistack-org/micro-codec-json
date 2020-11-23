@@ -4,57 +4,49 @@ package json
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"github.com/unistack-org/micro/v3/codec"
-	jsonpb "google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
-type Codec struct {
-	Conn    io.ReadWriteCloser
-	Encoder *json.Encoder
-	Decoder *json.Decoder
+type jsonCodec struct {
 }
 
-func (c *Codec) ReadHeader(m *codec.Message, t codec.MessageType) error {
+func (c *jsonCodec) ReadHeader(conn io.ReadWriter, m *codec.Message, t codec.MessageType) error {
 	return nil
 }
 
-func (c *Codec) ReadBody(b interface{}) error {
+func (c *jsonCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 	if b == nil {
 		return nil
 	}
-	switch m := b.(type) {
-	case proto.Message:
-		buf, err := ioutil.ReadAll(c.Conn)
-		if err != nil {
-			return err
-		}
-		return jsonpb.Unmarshal(buf, m)
-	}
-	return c.Decoder.Decode(b)
+	return json.NewDecoder(conn).Decode(b)
 }
 
-func (c *Codec) Write(m *codec.Message, b interface{}) error {
+func (c *jsonCodec) Write(conn io.ReadWriter, m *codec.Message, b interface{}) error {
 	if b == nil {
 		return nil
 	}
-	return c.Encoder.Encode(b)
+	return json.NewEncoder(conn).Encode(b)
 }
 
-func (c *Codec) Close() error {
-	return c.Conn.Close()
+func (c *jsonCodec) Marshal(b interface{}) ([]byte, error) {
+	if b == nil {
+		return nil, nil
+	}
+	return json.Marshal(b)
 }
 
-func (c *Codec) String() string {
+func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
+	if b == nil {
+		return nil
+	}
+	return json.Unmarshal(b, v)
+}
+
+func (c *jsonCodec) String() string {
 	return "json"
 }
 
-func NewCodec(c io.ReadWriteCloser) codec.Codec {
-	return &Codec{
-		Conn:    c,
-		Decoder: json.NewDecoder(c),
-		Encoder: json.NewEncoder(c),
-	}
+func NewCodec() codec.Codec {
+	return &jsonCodec{}
 }
