@@ -24,7 +24,7 @@ func (c *jsonCodec) Marshal(b interface{}) ([]byte, error) {
 }
 
 func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
-	if b == nil {
+	if b == nil || v == nil {
 		return nil
 	}
 	switch m := v.(type) {
