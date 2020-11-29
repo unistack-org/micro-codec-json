@@ -12,10 +12,9 @@ import (
 type jsonCodec struct{}
 
 func (c *jsonCodec) Marshal(b interface{}) ([]byte, error) {
-	if b == nil {
-		return nil, nil
-	}
 	switch m := b.(type) {
+	case nil:
+		return nil, nil
 	case *codec.Frame:
 		return m.Data, nil
 	}
@@ -24,10 +23,12 @@ func (c *jsonCodec) Marshal(b interface{}) ([]byte, error) {
 }
 
 func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
-	if b == nil || v == nil {
+	if b == nil {
 		return nil
 	}
 	switch m := v.(type) {
+	case nil:
+		return nil
 	case *codec.Frame:
 		m.Data = b
 		return nil
@@ -41,10 +42,9 @@ func (c *jsonCodec) ReadHeader(conn io.ReadWriter, m *codec.Message, t codec.Mes
 }
 
 func (c *jsonCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
-	if b == nil {
-		return nil
-	}
 	switch m := b.(type) {
+	case nil:
+		return nil
 	case *codec.Frame:
 		buf, err := ioutil.ReadAll(conn)
 		if err != nil {
@@ -58,10 +58,9 @@ func (c *jsonCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 }
 
 func (c *jsonCodec) Write(conn io.ReadWriter, m *codec.Message, b interface{}) error {
-	if b == nil {
-		return nil
-	}
 	switch m := b.(type) {
+	case nil:
+		return nil
 	case *codec.Frame:
 		_, err := conn.Write(m.Data)
 		return err
