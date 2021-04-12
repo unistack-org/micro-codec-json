@@ -54,7 +54,12 @@ func (c *jsonCodec) ReadBody(conn io.Reader, b interface{}) error {
 		return nil
 	}
 
-	return json.NewDecoder(conn).Decode(b)
+	err := json.NewDecoder(conn).Decode(b)
+	if err == io.EOF {
+		return nil
+	}
+
+	return err
 }
 
 func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, b interface{}) error {
