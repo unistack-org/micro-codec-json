@@ -23,7 +23,7 @@ func (c *jsonCodec) Marshal(b interface{}) ([]byte, error) {
 }
 
 func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
-	if b == nil {
+	if len(b) == 0 {
 		return nil
 	}
 	switch m := v.(type) {
@@ -49,6 +49,8 @@ func (c *jsonCodec) ReadBody(conn io.Reader, b interface{}) error {
 		buf, err := ioutil.ReadAll(conn)
 		if err != nil {
 			return err
+		} else if len(buf) == 0 {
+			return nil
 		}
 		m.Data = buf
 		return nil
