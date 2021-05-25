@@ -24,7 +24,7 @@ func (c *jsonCodec) Marshal(v interface{}) ([]byte, error) {
 	}
 
 	if nv, err := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); err == nil {
-		return json.Marshal(nv)
+		v = nv
 	}
 
 	return json.Marshal(v)
@@ -43,7 +43,7 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
 	}
 
 	if nv, err := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); err == nil {
-		return json.Unmarshal(b, nv)
+		v = nv
 	}
 
 	return json.Unmarshal(b, v)
@@ -68,18 +68,18 @@ func (c *jsonCodec) ReadBody(conn io.Reader, v interface{}) error {
 		return nil
 	}
 
-	var err error
-	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
-		err = json.NewDecoder(conn).Decode(nv)
-	} else {
-		err = json.NewDecoder(conn).Decode(v)
-	}
-
-	if err == io.EOF {
+	buf, err := io.ReadAll(conn)
+	if err != nil {
+		return err
+	} else if len(buf) == 0 {
 		return nil
 	}
 
-	return err
+	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
+		v = nv
+	}
+
+	return c.Unmarshal(buf, v)
 }
 
 func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error {
@@ -91,12 +91,15 @@ func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error
 		return err
 	}
 
-	var err error
 	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
-		err = json.NewEncoder(conn).Encode(nv)
-	} else {
-		err = json.NewEncoder(conn).Encode(v)
+		v = nv
 	}
+
+	buf, err := c.Marshal(v)
+	if err != nil {
+		return err
+	}
+	_, err = conn.Write(buf)
 
 	return err
 }
