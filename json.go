@@ -53,8 +53,8 @@ func (c *jsonCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.Message
 	return nil
 }
 
-func (c *jsonCodec) ReadBody(conn io.Reader, b interface{}) error {
-	switch m := b.(type) {
+func (c *jsonCodec) ReadBody(conn io.Reader, v interface{}) error {
+	switch m := v.(type) {
 	case nil:
 		return nil
 	case *codec.Frame:
@@ -68,7 +68,13 @@ func (c *jsonCodec) ReadBody(conn io.Reader, b interface{}) error {
 		return nil
 	}
 
-	err := json.NewDecoder(conn).Decode(b)
+	var err error
+	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
+		err = json.NewDecoder(conn).Decode(nv)
+	} else {
+		err = json.NewDecoder(conn).Decode(v)
+	}
+
 	if err == io.EOF {
 		return nil
 	}
@@ -76,8 +82,8 @@ func (c *jsonCodec) ReadBody(conn io.Reader, b interface{}) error {
 	return err
 }
 
-func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, b interface{}) error {
-	switch m := b.(type) {
+func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error {
+	switch m := v.(type) {
 	case nil:
 		return nil
 	case *codec.Frame:
@@ -85,7 +91,14 @@ func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, b interface{}) error
 		return err
 	}
 
-	return json.NewEncoder(conn).Encode(b)
+	var err error
+	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
+		err = json.NewEncoder(conn).Encode(nv)
+	} else {
+		err = json.NewEncoder(conn).Encode(v)
+	}
+
+	return err
 }
 
 func (c *jsonCodec) String() string {
