@@ -4,22 +4,30 @@ package json
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"github.com/unistack-org/micro/v3/codec"
+	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
 type jsonCodec struct{}
 
-func (c *jsonCodec) Marshal(b interface{}) ([]byte, error) {
-	switch m := b.(type) {
+const (
+	flattenTag = "flatten"
+)
+
+func (c *jsonCodec) Marshal(v interface{}) ([]byte, error) {
+	switch m := v.(type) {
 	case nil:
 		return nil, nil
 	case *codec.Frame:
 		return m.Data, nil
 	}
 
-	return json.Marshal(b)
+	if nv, err := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); err == nil {
+		return json.Marshal(nv)
+	}
+
+	return json.Marshal(v)
 }
 
 func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
@@ -34,6 +42,10 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
 		return nil
 	}
 
+	if nv, err := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); err == nil {
+		return json.Unmarshal(b, nv)
+	}
+
 	return json.Unmarshal(b, v)
 }
 
@@ -46,7 +58,7 @@ func (c *jsonCodec) ReadBody(conn io.Reader, b interface{}) error {
 	case nil:
 		return nil
 	case *codec.Frame:
-		buf, err := ioutil.ReadAll(conn)
+		buf, err := io.ReadAll(conn)
 		if err != nil {
 			return err
 		} else if len(buf) == 0 {
