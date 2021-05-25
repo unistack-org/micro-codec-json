@@ -16,10 +16,11 @@ const (
 )
 
 func (c *jsonCodec) Marshal(v interface{}) ([]byte, error) {
-	switch m := v.(type) {
-	case nil:
+	if v == nil {
 		return nil, nil
-	case *codec.Frame:
+	}
+
+	if m, ok := v.(*codec.Frame); ok {
 		return m.Data, nil
 	}
 
@@ -31,13 +32,11 @@ func (c *jsonCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
-	if len(b) == 0 {
+	if len(b) == 0 || v == nil {
 		return nil
 	}
-	switch m := v.(type) {
-	case nil:
-		return nil
-	case *codec.Frame:
+
+	if m, ok := v.(*codec.Frame); ok {
 		m.Data = b
 		return nil
 	}
@@ -54,17 +53,7 @@ func (c *jsonCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.Message
 }
 
 func (c *jsonCodec) ReadBody(conn io.Reader, v interface{}) error {
-	switch m := v.(type) {
-	case nil:
-		return nil
-	case *codec.Frame:
-		buf, err := io.ReadAll(conn)
-		if err != nil {
-			return err
-		} else if len(buf) == 0 {
-			return nil
-		}
-		m.Data = buf
+	if v == nil {
 		return nil
 	}
 
@@ -83,16 +72,8 @@ func (c *jsonCodec) ReadBody(conn io.Reader, v interface{}) error {
 }
 
 func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error {
-	switch m := v.(type) {
-	case nil:
+	if v == nil {
 		return nil
-	case *codec.Frame:
-		_, err := conn.Write(m.Data)
-		return err
-	}
-
-	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
-		v = nv
 	}
 
 	buf, err := c.Marshal(v)
@@ -100,7 +81,6 @@ func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error
 		return err
 	}
 	_, err = conn.Write(buf)
-
 	return err
 }
 
