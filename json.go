@@ -57,8 +57,8 @@ func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error)
 	}
 
 	marshalOptions := DefaultMarshalOptions
-	if c.opts.Context != nil {
-		if f, ok := c.opts.Context.Value(marshalOptionsKey{}).(JsonMarshalOptions); ok {
+	if options.Context != nil {
+		if f, ok := options.Context.Value(marshalOptionsKey{}).(JsonMarshalOptions); ok {
 			marshalOptions = f
 		}
 	}
@@ -95,8 +95,8 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 	}
 
 	unmarshalOptions := DefaultUnmarshalOptions
-	if c.opts.Context != nil {
-		if f, ok := c.opts.Context.Value(unmarshalOptionsKey{}).(JsonUnmarshalOptions); ok {
+	if options.Context != nil {
+		if f, ok := options.Context.Value(unmarshalOptionsKey{}).(JsonUnmarshalOptions); ok {
 			unmarshalOptions = f
 		}
 	}
