@@ -2,6 +2,7 @@
 package json
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 
@@ -9,13 +10,35 @@ import (
 	rutil "github.com/unistack-org/micro/v3/util/reflect"
 )
 
-type jsonCodec struct{}
+var (
+	DefaultMarshalOptions = JsonMarshalOptions{
+		EscapeHTML: true,
+	}
+
+	DefaultUnmarshalOptions = JsonUnmarshalOptions{
+		DisallowUnknownFields: false,
+		UseNumber:             false,
+	}
+)
+
+type JsonMarshalOptions struct {
+	EscapeHTML bool
+}
+
+type JsonUnmarshalOptions struct {
+	DisallowUnknownFields bool
+	UseNumber             bool
+}
+
+type jsonCodec struct {
+	opts codec.Options
+}
 
 const (
 	flattenTag = "flatten"
 )
 
-func (c *jsonCodec) Marshal(v interface{}) ([]byte, error) {
+func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -24,14 +47,35 @@ func (c *jsonCodec) Marshal(v interface{}) ([]byte, error) {
 		return m.Data, nil
 	}
 
-	if nv, err := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); err == nil {
+	options := c.opts
+	for _, o := range opts {
+		o(&options)
+	}
+
+	if nv, err := rutil.StructFieldByTag(v, options.TagName, flattenTag); err == nil {
 		v = nv
+	}
+
+	marshalOptions := DefaultMarshalOptions
+	if c.opts.Context != nil {
+		if f, ok := c.opts.Context.Value(marshalOptionsKey{}).(JsonMarshalOptions); ok {
+			marshalOptions = f
+		}
+	}
+
+	if !marshalOptions.EscapeHTML {
+		w := bytes.NewBuffer(nil)
+		enc := json.NewEncoder(w)
+		enc.SetEscapeHTML(marshalOptions.EscapeHTML)
+		err := enc.Encode(v)
+		buf := w.Bytes()
+		return buf[:len(buf)-1], err
 	}
 
 	return json.Marshal(v)
 }
 
-func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
+func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) error {
 	if len(b) == 0 || v == nil {
 		return nil
 	}
@@ -41,8 +85,32 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}) error {
 		return nil
 	}
 
-	if nv, err := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); err == nil {
+	options := c.opts
+	for _, o := range opts {
+		o(&options)
+	}
+
+	if nv, err := rutil.StructFieldByTag(v, options.TagName, flattenTag); err == nil {
 		v = nv
+	}
+
+	unmarshalOptions := DefaultUnmarshalOptions
+	if c.opts.Context != nil {
+		if f, ok := c.opts.Context.Value(unmarshalOptionsKey{}).(JsonUnmarshalOptions); ok {
+			unmarshalOptions = f
+		}
+	}
+
+	if unmarshalOptions.DisallowUnknownFields || unmarshalOptions.UseNumber {
+		dec := json.NewDecoder(bytes.NewBuffer(b))
+		if unmarshalOptions.DisallowUnknownFields {
+			dec.DisallowUnknownFields()
+		}
+		if unmarshalOptions.UseNumber {
+			dec.UseNumber()
+		}
+
+		return dec.Decode(v)
 	}
 
 	return json.Unmarshal(b, v)
@@ -88,6 +156,6 @@ func (c *jsonCodec) String() string {
 	return "json"
 }
 
-func NewCodec() codec.Codec {
-	return &jsonCodec{}
+func NewCodec(opts ...codec.Option) codec.Codec {
+	return &jsonCodec{opts: codec.NewOptions(opts...)}
 }

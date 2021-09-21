@@ -18,7 +18,7 @@ func TestStructByTag(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(buf, []byte(`["first","second"]`)) {
-		t.Fatalf("invalid marshal: %s", buf)
+		t.Fatalf("invalid marshal: %v != %v", buf, []byte(`["first","second"]`))
 	}
 
 	err = c.Unmarshal([]byte(`["1","2"]`), val)
@@ -29,7 +29,6 @@ func TestStructByTag(t *testing.T) {
 	if len(val.Name) != 2 {
 		t.Fatalf("invalid unmarshal: %v", val)
 	}
-
 }
 
 func TestReadBody(t *testing.T) {
