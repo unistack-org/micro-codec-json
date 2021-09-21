@@ -12,6 +12,6 @@ func UnmarshalOptions(o JsonUnmarshalOptions) codec.Option {
 
 type marshalOptionsKey struct{}
 
-func MarshalOptions(o JsonUnmarshalOptions) codec.Option {
+func MarshalOptions(o JsonMarshalOptions) codec.Option {
 	return codec.SetOption(marshalOptionsKey{}, o)
 }
