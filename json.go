@@ -43,10 +43,6 @@ func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error)
 		return nil, nil
 	}
 
-	if m, ok := v.(*codec.Frame); ok {
-		return m.Data, nil
-	}
-
 	options := c.opts
 	for _, o := range opts {
 		o(&options)
@@ -54,6 +50,10 @@ func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error)
 
 	if nv, err := rutil.StructFieldByTag(v, options.TagName, flattenTag); err == nil {
 		v = nv
+	}
+
+	if m, ok := v.(*codec.Frame); ok {
+		return m.Data, nil
 	}
 
 	marshalOptions := DefaultMarshalOptions
@@ -80,11 +80,6 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 		return nil
 	}
 
-	if m, ok := v.(*codec.Frame); ok {
-		m.Data = b
-		return nil
-	}
-
 	options := c.opts
 	for _, o := range opts {
 		o(&options)
@@ -92,6 +87,11 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 
 	if nv, err := rutil.StructFieldByTag(v, options.TagName, flattenTag); err == nil {
 		v = nv
+	}
+
+	if m, ok := v.(*codec.Frame); ok {
+		m.Data = b
+		return nil
 	}
 
 	unmarshalOptions := DefaultUnmarshalOptions
