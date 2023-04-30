@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v4/codec"
 )
 
 func TestFrame(t *testing.T) {

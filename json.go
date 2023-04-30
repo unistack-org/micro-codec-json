@@ -1,14 +1,14 @@
 // Package json provides a json codec
-package json // import "go.unistack.org/micro-codec-json/v3"
+package json // import "go.unistack.org/micro-codec-json/v4"
 
 import (
 	"bytes"
 	"encoding/json"
 	"io"
 
-	pb "go.unistack.org/micro-proto/v3/codec"
-	"go.unistack.org/micro/v3/codec"
-	rutil "go.unistack.org/micro/v3/util/reflect"
+	pb "go.unistack.org/micro-proto/v4/codec"
+	"go.unistack.org/micro/v4/codec"
+	rutil "go.unistack.org/micro/v4/util/reflect"
 )
 
 var (
