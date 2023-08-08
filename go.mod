@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	go.unistack.org/micro-proto/v3 v3.3.1
-	go.unistack.org/micro/v3 v3.10.24
+	go.unistack.org/micro/v3 v3.10.25
 )
 
-require google.golang.org/protobuf v1.28.1 // indirect
+require google.golang.org/protobuf v1.31.0 // indirect
