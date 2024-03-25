@@ -9,5 +9,5 @@ require (
 
 require (
 	github.com/google/go-cmp v0.5.9 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
