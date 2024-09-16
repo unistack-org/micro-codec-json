@@ -1,15 +1,17 @@
 // Package json provides a json codec
-package json // import "go.unistack.org/micro-codec-json/v3"
+package json
 
 import (
 	"bytes"
 	"encoding/json"
-	"io"
+	"reflect"
 
 	pb "go.unistack.org/micro-proto/v3/codec"
 	"go.unistack.org/micro/v3/codec"
 	rutil "go.unistack.org/micro/v3/util/reflect"
 )
+
+var _ codec.Codec = (*jsonCodec)(nil)
 
 var (
 	DefaultMarshalOptions = JsonMarshalOptions{
@@ -35,10 +37,6 @@ type jsonCodec struct {
 	opts codec.Options
 }
 
-const (
-	flattenTag = "flatten"
-)
-
 func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error) {
 	if v == nil {
 		return nil, nil
@@ -49,8 +47,10 @@ func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error)
 		o(&options)
 	}
 
-	if nv, err := rutil.StructFieldByTag(v, options.TagName, flattenTag); err == nil {
-		v = nv
+	if options.Flatten {
+		if nv, err := rutil.StructFieldByTag(v, options.TagName, "flatten"); err == nil {
+			v = nv
+		}
 	}
 
 	switch m := v.(type) {
@@ -89,8 +89,15 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 		o(&options)
 	}
 
-	if nv, err := rutil.StructFieldByTag(v, options.TagName, flattenTag); err == nil {
-		v = nv
+	if options.Flatten {
+		if nv, err := rutil.StructFieldByTag(v, options.TagName, "flatten"); err == nil {
+			v = nv
+			rv := reflect.ValueOf(v)
+			if rv.Kind() != reflect.Pointer &&
+				rv.Kind() != reflect.Map {
+				v = reflect.New(rv.Type()).Interface()
+			}
+		}
 	}
 
 	switch m := v.(type) {
@@ -122,42 +129,6 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 	}
 
 	return json.Unmarshal(b, v)
-}
-
-func (c *jsonCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.MessageType) error {
-	return nil
-}
-
-func (c *jsonCodec) ReadBody(conn io.Reader, v interface{}) error {
-	if v == nil {
-		return nil
-	}
-
-	buf, err := io.ReadAll(conn)
-	if err != nil {
-		return err
-	} else if len(buf) == 0 {
-		return nil
-	}
-
-	if nv, nerr := rutil.StructFieldByTag(v, codec.DefaultTagName, flattenTag); nerr == nil {
-		v = nv
-	}
-
-	return c.Unmarshal(buf, v)
-}
-
-func (c *jsonCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error {
-	if v == nil {
-		return nil
-	}
-
-	buf, err := c.Marshal(v)
-	if err != nil {
-		return err
-	}
-	_, err = conn.Write(buf)
-	return err
 }
 
 func (c *jsonCodec) String() string {
