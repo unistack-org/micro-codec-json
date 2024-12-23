@@ -116,6 +116,7 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 		return nil
 	case codec.RawMessage:
 		copy(m, b)
+		return nil
 	}
 
 	unmarshalOptions := DefaultUnmarshalOptions
