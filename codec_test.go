@@ -14,7 +14,7 @@ func TestRawMessage(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	t.Logf("%s", buf)
+	_ = buf
 }
 
 func TestFrame(t *testing.T) {

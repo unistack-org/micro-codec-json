@@ -58,6 +58,10 @@ func (c *jsonCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error)
 		return m.Data, nil
 	case *pb.Frame:
 		return m.Data, nil
+	case codec.RawMessage:
+		return []byte(m), nil
+	case *codec.RawMessage:
+		return []byte(*m), nil
 	}
 
 	marshalOptions := DefaultMarshalOptions
@@ -107,6 +111,11 @@ func (c *jsonCodec) Unmarshal(b []byte, v interface{}, opts ...codec.Option) err
 	case *pb.Frame:
 		m.Data = b
 		return nil
+	case *codec.RawMessage:
+		*m = append((*m)[0:0], b...)
+		return nil
+	case codec.RawMessage:
+		copy(m, b)
 	}
 
 	unmarshalOptions := DefaultUnmarshalOptions
