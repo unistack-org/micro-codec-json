@@ -4,18 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"go.unistack.org/micro/v3/broker"
-	"go.unistack.org/micro/v3/codec"
+	"go.unistack.org/micro/v4/codec"
 )
-
-func TestRawMessage(t *testing.T) {
-	b := &broker.Message{}
-	buf, err := NewCodec().Marshal(b)
-	if err != nil {
-		panic(err)
-	}
-	_ = buf
-}
 
 func TestFrame(t *testing.T) {
 	s := &codec.Frame{Data: []byte("test")}

@@ -1,7 +1,7 @@
 package json
 
 import (
-	codec "go.unistack.org/micro/v3/codec"
+	codec "go.unistack.org/micro/v4/codec"
 )
 
 type unmarshalOptionsKey struct{}
