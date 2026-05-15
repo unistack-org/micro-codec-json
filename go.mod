@@ -1,12 +1,12 @@
-module go.unistack.org/micro-codec-json/v4
+module go.unistack.org/micro-codec-json/v5
 
 go 1.22.0
 
 toolchain go1.24.0
 
 require (
-	go.unistack.org/micro-proto/v4 v4.1.0
-	go.unistack.org/micro/v4 v4.1.2
+	go.unistack.org/micro-proto/v5 v4.1.0
+	go.unistack.org/micro/v5 v4.1.2
 )
 
 require (
